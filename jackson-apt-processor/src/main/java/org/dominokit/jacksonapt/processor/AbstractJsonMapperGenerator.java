@@ -128,10 +128,11 @@ public abstract class AbstractJsonMapperGenerator {
         TypeElement typeElement = (TypeElement) typeUtils.asElement(beanType);
 
         final List<Element> orderedProperties = new ArrayList<>();
-
-        final List<Element> fields = typeElement.getEnclosedElements().stream().filter(e -> ElementKind.FIELD
-                .equals(e.getKind()) && !e.getModifiers()
-                .contains(Modifier.STATIC)).collect(Collectors.toList());
+        final List<Element> fields = typeElement.getEnclosedElements().stream()
+        		.filter(e -> ElementKind.FIELD.equals(e.getKind()) 
+        				&& !e.getModifiers().contains(Modifier.STATIC)
+        				&& !isIgnored(e))
+        		.collect(Collectors.toList());
 
         Optional.ofNullable(typeUtils.asElement(beanType).getAnnotation(JsonPropertyOrder.class))
                 .ifPresent(jsonPropertyOrder -> {
@@ -170,5 +171,12 @@ public abstract class AbstractJsonMapperGenerator {
      */
     protected boolean isNotStatic(Element field) {
         return !field.getModifiers().contains(Modifier.STATIC);
+    }
+    
+    private boolean isIgnored(Element field) {
+    	boolean ignored = field.getAnnotationMirrors()
+    			.stream()
+    			.anyMatch(m -> m.getAnnotationType().asElement().getSimpleName().toString().contains("JsonIgnore"));
+    	return ignored;
     }
 }
